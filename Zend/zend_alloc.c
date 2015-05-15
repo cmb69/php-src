@@ -867,9 +867,11 @@ static void *zend_mm_alloc_pages(zend_mm_heap *heap, int pages_count, size_t siz
 static void *zend_mm_alloc_pages(zend_mm_heap *heap, int pages_count ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC)
 #endif
 {
-	zend_mm_chunk *chunk = heap->main_chunk;
+	zend_mm_chunk *chunk;
 	int page_num, len;
 
+start:
+	chunk = heap->main_chunk;
 	while (1) {
 		if (UNEXPECTED(chunk->free_pages < pages_count)) {
 			goto not_found;
@@ -994,6 +996,10 @@ not_found:
 #if ZEND_MM_LIMIT
 				if (heap->real_size + ZEND_MM_CHUNK_SIZE > heap->limit) {
 					if (heap->overflow == 0) {
+						/* last attempt to avoid failure due to memory_limit */
+						if (gc_collect_cycles()) {
+							goto start;
+						}
 #if ZEND_DEBUG
 						zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted at %s:%d (tried to allocate %zu bytes)", heap->limit, __zend_filename, __zend_lineno, size);
 #else
@@ -1665,12 +1671,18 @@ static void zend_mm_change_huge_block_size(zend_mm_heap *heap, void *ptr, size_t
 
 static void *zend_mm_alloc_huge(zend_mm_heap *heap, size_t size ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC)
 {
-	size_t new_size = ZEND_MM_ALIGNED_SIZE_EX(size, REAL_PAGE_SIZE);
+	size_t new_size;
 	void *ptr;
 
+start:
+	new_size = ZEND_MM_ALIGNED_SIZE_EX(size, REAL_PAGE_SIZE);
 #if ZEND_MM_LIMIT
 	if (heap->real_size + new_size > heap->limit) {
 		if (heap->overflow == 0) {
+			/* last attempt to avoid failure due to memory_limit */
+			if (gc_collect_cycles()) {
+				goto start;
+			}
 #if ZEND_DEBUG
 			zend_mm_safe_error(heap, "Allowed memory size of %zu bytes exhausted at %s:%d (tried to allocate %zu bytes)", heap->limit, __zend_filename, __zend_lineno, size);
 #else
