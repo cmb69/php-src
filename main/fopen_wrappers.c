@@ -160,7 +160,7 @@ PHPAPI int php_check_specific_open_basedir(const char *basedir, const char *path
 	}
 
 	/* normalize and expand path */
-	if (expand_filepath(path, resolved_name) == NULL) {
+	if (expand_filepath_with_mode(path, resolved_name, NULL, 0, FALSE) == NULL) {
 		return -1;
 	}
 
