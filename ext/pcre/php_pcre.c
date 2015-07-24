@@ -118,12 +118,18 @@ static PHP_GINIT_FUNCTION(pcre) /* {{{ */
 	pcre_globals->backtrack_limit = 0;
 	pcre_globals->recursion_limit = 0;
 	pcre_globals->error_code      = PHP_PCRE_NO_ERROR;
+#ifdef PCRE_STUDY_JIT_COMPILE
+	pcre_globals->jit_stack       = pcre_jit_stack_alloc(32 * 1024, 512 * 1024);
+#endif
 }
 /* }}} */
 
 static PHP_GSHUTDOWN_FUNCTION(pcre) /* {{{ */
 {
 	zend_hash_destroy(&pcre_globals->pcre_cache);
+#ifdef PCRE_STUDY_JIT_COMPILE
+	pcre_jit_stack_free(pcre_globals->jit_stack);
+#endif
 }
 /* }}} */
 
@@ -456,6 +462,7 @@ PHPAPI pcre_cache_entry* pcre_get_compiled_regex_cache(zend_string *regex)
 			extra->flags |= PCRE_EXTRA_MATCH_LIMIT | PCRE_EXTRA_MATCH_LIMIT_RECURSION;
 			extra->match_limit = (unsigned long)PCRE_G(backtrack_limit);
 			extra->match_limit_recursion = (unsigned long)PCRE_G(recursion_limit);
+			pcre_assign_jit_stack(extra, NULL, PCRE_G(jit_stack));
 		}
 		if (error != NULL) {
 			php_error_docref(NULL, E_WARNING, "Error while studying pattern");

@@ -77,6 +77,7 @@ ZEND_BEGIN_MODULE_GLOBALS(pcre)
 	zend_long recursion_limit;
 #ifdef PCRE_STUDY_JIT_COMPILE
 	zend_bool jit;
+	pcre_jit_stack *jit_stack;
 #endif
 	int  error_code;
 ZEND_END_MODULE_GLOBALS(pcre)
