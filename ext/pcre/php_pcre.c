@@ -105,6 +105,30 @@ static void php_free_pcre_cache(zval *data) /* {{{ */
 }
 /* }}} */
 
+/* {{{ static pcre_clean_cache */
+static int pcre_clean_cache(zval *data, void *arg)
+{
+	pcre_cache_entry *pce = (pcre_cache_entry *) Z_PTR_P(data);
+	int *num_clean = (int *)arg;
+
+	if (*num_clean > 0 && !pce->refcount) {
+		(*num_clean)--;
+		return ZEND_HASH_APPLY_REMOVE;
+	} else {
+		return ZEND_HASH_APPLY_KEEP;
+	}
+}
+/* }}} */
+
+static ZEND_INI_MH(OnUpdateJit) /* {{{ */
+{
+	int num_clean = PCRE_CACHE_SIZE;
+	
+	zend_hash_apply_with_argument(&PCRE_G(pcre_cache), pcre_clean_cache, &num_clean);
+	return OnUpdateBool(entry, new_value, mh_arg1, mh_arg2, mh_arg3, stage);
+}
+/* }}} */
+
 static PHP_GINIT_FUNCTION(pcre) /* {{{ */
 {
 	zend_hash_init(&pcre_globals->pcre_cache, 0, NULL, php_free_pcre_cache, 1);
@@ -124,7 +148,7 @@ PHP_INI_BEGIN()
 	STD_PHP_INI_ENTRY("pcre.backtrack_limit", "1000000", PHP_INI_ALL, OnUpdateLong, backtrack_limit, zend_pcre_globals, pcre_globals)
 	STD_PHP_INI_ENTRY("pcre.recursion_limit", "100000",  PHP_INI_ALL, OnUpdateLong, recursion_limit, zend_pcre_globals, pcre_globals)
 #ifdef PCRE_STUDY_JIT_COMPILE
-	STD_PHP_INI_ENTRY("pcre.jit",             "1",       PHP_INI_ALL, OnUpdateBool, jit,             zend_pcre_globals, pcre_globals)
+	STD_PHP_INI_ENTRY("pcre.jit",             "1",       PHP_INI_ALL, OnUpdateJit,  jit,             zend_pcre_globals, pcre_globals)
 #endif
 PHP_INI_END()
 
@@ -181,21 +205,6 @@ static PHP_MSHUTDOWN_FUNCTION(pcre)
 	UNREGISTER_INI_ENTRIES();
 
 	return SUCCESS;
-}
-/* }}} */
-
-/* {{{ static pcre_clean_cache */
-static int pcre_clean_cache(zval *data, void *arg)
-{
-	pcre_cache_entry *pce = (pcre_cache_entry *) Z_PTR_P(data);
-	int *num_clean = (int *)arg;
-
-	if (*num_clean > 0 && !pce->refcount) {
-		(*num_clean)--;
-		return ZEND_HASH_APPLY_REMOVE;
-	} else {
-		return ZEND_HASH_APPLY_KEEP;
-	}
 }
 /* }}} */
 
