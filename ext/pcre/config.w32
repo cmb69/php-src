@@ -1,8 +1,8 @@
 // vim:ft=javascript
 
-if (PHP_EXTERNAL_PCRE != "no") {
-	if (CHECK_LIB("pcre2-8.lib", "pcre", PHP_EXTERNAL_PCRE) &&
-			CHECK_HEADER_ADD_INCLUDE("pcre2.h", "CFLAGS", PHP_EXTERNAL_PCRE + "\\include")) { // FIXME CFLAGS should be CFLAGS_PCRE
+if (PHP_EXTERNAL_PCRE == "yes") {
+	if (CHECK_LIB("pcre2-8.lib", "pcre") &&
+			CHECK_HEADER_ADD_INCLUDE("pcre2.h", "CFLAGS_PCRE")) {
 		EXTENSION("pcre", "php_pcre.c", false /*never shared */, "-DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
 		AC_DEFINE('HAVE_PCRE', 1, 'Have PCRE library');
 		AC_DEFINE('PCRE2_CODE_UNIT_WIDTH', 8, 'Have PCRE library');
@@ -30,6 +30,6 @@ if (PHP_EXTERNAL_PCRE != "no") {
 ARG_WITH("external-pcre", "Use external library for PCRE support", "no");
 
 ARG_WITH("pcre-jit", "Enable PCRE JIT support", "yes");
-if (PHP_PCRE_JIT != "no" && PHP_EXTERNAL_PCRE == "no") { // FIXME support JIT if available
+if (PHP_PCRE_JIT != "no" || PHP_EXTERNAL_PCRE != "yes") {
 	AC_DEFINE('HAVE_PCRE_JIT_SUPPORT', 1, 'PCRE library');
 }
