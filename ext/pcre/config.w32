@@ -1,19 +1,35 @@
 // vim:ft=javascript
 
-EXTENSION("pcre", "php_pcre.c", false /* never shared */,
-		"-Iext/pcre/pcre2lib -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
-ADD_SOURCES("ext/pcre/pcre2lib", "pcre2_auto_possess.c pcre2_chartables.c pcre2_compile.c pcre2_config.c pcre2_context.c pcre2_dfa_match.c pcre2_error.c pcre2_jit_compile.c pcre2_maketables.c pcre2_match.c pcre2_match_data.c pcre2_newline.c pcre2_ord2utf.c pcre2_pattern_info.c pcre2_serialize.c pcre2_string_utils.c pcre2_study.c pcre2_substitute.c  pcre2_substring.c pcre2_tables.c pcre2_ucd.c pcre2_valid_utf.c pcre2_xclass.c pcre2_find_bracket.c pcre2_convert.c pcre2_extuni.c", "pcre");
-ADD_DEF_FILE("ext\\pcre\\php_pcre.def");
+if (PHP_EXTERNAL_PCRE != "no") {
+	if (CHECK_LIB("pcre2-8.lib", "pcre", PHP_EXTERNAL_PCRE) &&
+			CHECK_HEADER_ADD_INCLUDE("pcre2.h", "CFLAGS", PHP_EXTERNAL_PCRE + "\\include")) { // FIXME CFLAGS should be CFLAGS_PCRE
+		EXTENSION("pcre", "php_pcre.c", false /*never shared */, "-DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
+		AC_DEFINE('HAVE_PCRE', 1, 'Have PCRE library');
+		AC_DEFINE('PCRE2_CODE_UNIT_WIDTH', 8, 'Have PCRE library');
+		AC_DEFINE("PCRE2_STATIC", 1, "");
+		PHP_PCRE="yes";
+		PHP_INSTALL_HEADERS("ext/pcre", "php_pcre.h");
+	} else {
+		ERROR("pcre not enabled; libraries and headers not found");
+	}
+} else {
+	EXTENSION("pcre", "php_pcre.c", false /* never shared */,
+			"-Iext/pcre/pcre2lib -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
+	ADD_SOURCES("ext/pcre/pcre2lib", "pcre2_auto_possess.c pcre2_chartables.c pcre2_compile.c pcre2_config.c pcre2_context.c pcre2_dfa_match.c pcre2_error.c pcre2_jit_compile.c pcre2_maketables.c pcre2_match.c pcre2_match_data.c pcre2_newline.c pcre2_ord2utf.c pcre2_pattern_info.c pcre2_serialize.c pcre2_string_utils.c pcre2_study.c pcre2_substitute.c  pcre2_substring.c pcre2_tables.c pcre2_ucd.c pcre2_valid_utf.c pcre2_xclass.c pcre2_find_bracket.c pcre2_convert.c pcre2_extuni.c", "pcre");
+	ADD_DEF_FILE("ext\\pcre\\php_pcre.def");
 
-AC_DEFINE('HAVE_BUNDLED_PCRE', 1, 'Using bundled PCRE library');
-AC_DEFINE('HAVE_PCRE', 1, 'Have PCRE library');
-AC_DEFINE('PCRE2_CODE_UNIT_WIDTH', 8, 'Have PCRE library');
-AC_DEFINE("PCRE2_STATIC", 1, "");
-PHP_PCRE="yes";
-PHP_INSTALL_HEADERS("ext/pcre", "php_pcre.h pcre2lib/");
-ADD_FLAG("CFLAGS_PCRE", " /D HAVE_CONFIG_H");
+	AC_DEFINE('HAVE_BUNDLED_PCRE', 1, 'Using bundled PCRE library');
+	AC_DEFINE('HAVE_PCRE', 1, 'Have PCRE library');
+	AC_DEFINE('PCRE2_CODE_UNIT_WIDTH', 8, 'Have PCRE library');
+	AC_DEFINE("PCRE2_STATIC", 1, "");
+	PHP_PCRE="yes";
+	PHP_INSTALL_HEADERS("ext/pcre", "php_pcre.h pcre2lib/");
+	ADD_FLAG("CFLAGS_PCRE", " /D HAVE_CONFIG_H");
+}
+
+ARG_WITH("external-pcre", "Use external library for PCRE support", "no");
 
 ARG_WITH("pcre-jit", "Enable PCRE JIT support", "yes");
-if (PHP_PCRE_JIT != "no") {
+if (PHP_PCRE_JIT != "no" && PHP_EXTERNAL_PCRE == "no") { // FIXME support JIT if available
 	AC_DEFINE('HAVE_PCRE_JIT_SUPPORT', 1, 'PCRE library');
 }
