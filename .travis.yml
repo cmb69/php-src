@@ -57,6 +57,7 @@ env:
       - ENABLE_MAINTAINER_ZTS=1 ENABLE_DEBUG=1
 
 before_script:
+    - mysql --version
     - ccache --version
     - ccache --zero-stats
     - export USE_CCACHE=1
