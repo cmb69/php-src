@@ -58,7 +58,7 @@ env:
 
 before_script:
     - mysql --version
-    - mysql -u travis --password=test -e "select version();"
+    - mysql -u travis -e "select version();"
     - ccache --version
     - ccache --zero-stats
     - export USE_CCACHE=1
