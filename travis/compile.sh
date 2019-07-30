@@ -25,6 +25,8 @@ fi
 
 MAKE_JOBS=${MAKE_JOBS:-2}
 
+mysql --version
+
 ./buildconf --force
 ./configure \
 --enable-option-checking=fatal \
