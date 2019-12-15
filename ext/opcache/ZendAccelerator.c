@@ -2204,12 +2204,14 @@ static int accel_gen_uname_id(void)
 	unsigned char digest[16];
 	wchar_t uname[UNLEN + 1];
 	DWORD unsize = UNLEN;
+	DWORD procid = GetCurrentProcessId();
 
 	if (!GetUserNameW(uname, &unsize)) {
 		return FAILURE;
 	}
 	PHP_MD5Init(&ctx);
 	PHP_MD5Update(&ctx, (void *) uname, (unsize - 1) * sizeof(wchar_t));
+	PHP_MD5Update(&ctx, &procid, sizeof procid);
 	PHP_MD5Update(&ctx, ZCG(accel_directives).cache_id, strlen(ZCG(accel_directives).cache_id));
 	PHP_MD5Final(digest, &ctx);
 	php_hash_bin2hex(accel_uname_id, digest, sizeof digest);
