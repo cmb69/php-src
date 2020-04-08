@@ -425,6 +425,7 @@ void init_compiler(void) /* {{{ */
 
 	CG(delayed_variance_obligations) = NULL;
 	CG(delayed_autoloads) = NULL;
+	FC(imports) = NULL;
 }
 /* }}} */
 
