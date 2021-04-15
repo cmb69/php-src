@@ -371,15 +371,45 @@ static int php_iconv_output_conflict(const char *handler_name, size_t handler_na
 	return SUCCESS;
 }
 
-static php_output_handler *php_iconv_output_handler_init(const char *handler_name, size_t handler_name_len, size_t chunk_size, int flags)
+typedef struct {
+	iconv_t cd;
+	char buf[64];
+	size_t len;
+} php_iconv_context;
+
+static php_iconv_context *php_iconv_output_handler_context_init(void)
 {
-	return php_output_handler_create_internal(handler_name, handler_name_len, php_iconv_output_handler, chunk_size, flags);
+	php_iconv_context *ctx = (php_iconv_context *) emalloc(sizeof(php_iconv_context));
+	ctx->len = 0;
+	return ctx;
 }
 
-static int php_iconv_output_handler(void **nothing, php_output_context *output_context)
+static void php_iconv_output_handler_context_dtor(void *opaq)
+{
+	php_iconv_context *ctx = (php_iconv_context *) opaq;
+
+	if (ctx != NULL) {
+		if (ctx->cd != NULL) {
+			iconv_close(ctx->cd);
+		}
+		efree(ctx);
+	}
+}
+
+static php_output_handler *php_iconv_output_handler_init(const char *handler_name, size_t handler_name_len, size_t chunk_size, int flags)
+{
+	php_output_handler *h = NULL;
+	if ((h = php_output_handler_create_internal(handler_name, handler_name_len, php_iconv_output_handler, chunk_size, flags)) != NULL) {
+		php_output_handler_set_context(h, php_iconv_output_handler_context_init(), php_iconv_output_handler_context_dtor);
+	}
+	return h;
+}
+
+static int php_iconv_output_handler(void **handler_context, php_output_context *output_context)
 {
 	char *s, *content_type, *mimetype = NULL;
 	int output_status, mimetype_len = 0;
+	php_iconv_context *ctx = *(php_iconv_context **) handler_context;
 
 	if (output_context->op & PHP_OUTPUT_HANDLER_START) {
 		output_status = php_output_get_status();
@@ -414,19 +444,90 @@ static int php_iconv_output_handler(void **nothing, php_output_context *output_c
 		}
 	}
 
-	if (output_context->in.used) {
-		zend_string *out;
-		output_context->out.free = 1;
-		_php_iconv_show_error(php_iconv_string(output_context->in.data, output_context->in.used, &out, get_output_encoding(), get_internal_encoding()), get_output_encoding(), get_internal_encoding());
-		if (out) {
-			output_context->out.data = estrndup(ZSTR_VAL(out), ZSTR_LEN(out));
-			output_context->out.used = ZSTR_LEN(out);
-			zend_string_efree(out);
-		} else {
-			output_context->out.data = NULL;
-			output_context->out.used = 0;
+	if (output_context->op & PHP_OUTPUT_HANDLER_START) {
+		/* start up */
+		if ((ctx->cd = iconv_open(get_output_encoding(), get_internal_encoding())) == (iconv_t)-1) {
+			return FAILURE;
 		}
 	}
+
+	if (output_context->in.used) {
+		char *in_buf, *out_buf;
+		size_t in_left, out_left;
+
+		if (ctx->len > 0) {
+			char swap[64];
+			size_t len = 0;
+			if (output_context->in.used + ctx->len > output_context->in.size) {
+				len = output_context->in.used + ctx->len - output_context->in.size;
+				memcpy(swap, output_context->in.data + output_context->in.used - len, len);
+				output_context->in.used -= len;
+			}
+			memcpy(output_context->in.data + ctx->len, output_context->in.data, output_context->in.used);
+			memcpy(output_context->in.data, ctx->buf, ctx->len);
+			output_context->in.used += ctx->len;
+			if (len > 0) {
+				memcpy(ctx->buf, swap, len);
+			}
+			ctx->len = len;
+		}
+#if ICONV_SUPPORTS_ERRNO
+		output_context->out.size = output_context->in.used;
+#else
+		/* overallocate to hopefully avoid E2BIG; see php_iconv_string() */
+		output_context->out.size = 4 * output_context->in.used + 15;
+#endif
+		output_context->out.data = emalloc(output_context->out.size);
+		output_context->out.free = 1;
+		in_buf = output_context->in.data;
+		in_left = output_context->in.used;
+		out_buf = output_context->out.data;
+		out_left = output_context->out.size;
+		while (iconv(ctx->cd, &in_buf, &in_left, &out_buf, &out_left) == (size_t)-1) {
+#if ICONV_SUPPORTS_ERRNO
+			if (errno == EINVAL) {
+				break;
+			} else if (errno == E2BIG) {
+				size_t offset = out_buf - output_context->out.data;
+				out_left += output_context->out.size;
+				output_context->out.size <<= 1;
+				output_context->out.data = erealloc(output_context->out.data, output_context->out.size);
+				out_buf = output_context->out.data + offset;
+				continue;
+			} else {
+				_php_iconv_show_error(errno, get_output_encoding(), get_internal_encoding());
+				return FAILURE;
+			}
+#else
+			_php_iconv_show_error(PHP_ICONV_ERR_UNKNOWN, get_output_encoding(), get_internal_encoding());
+			return FAILURE;
+#endif
+		}
+		if (ctx->len + in_left > sizeof(ctx->buf)) {
+			return FAILURE; // not supposed to happen
+		} else if (in_left > 0) {
+			memcpy(ctx->buf + ctx->len, in_buf, in_left);
+			ctx->len += in_left;
+		}
+		output_context->out.used = output_context->out.size - out_left;
+	}
+
+	if (output_context->op & PHP_OUTPUT_HANDLER_FINAL) {
+		char *out_buf = output_context->out.data;
+		size_t out_left = output_context->out.size;
+		if (ctx->len > 0) {
+			if (iconv(ctx->cd, &ctx->buf, &ctx->len, &out_buf, &out_left) == (size_t)-1) {
+				return FAILURE; // handle E2BIG
+			}
+		}
+		if (iconv(ctx->cd, NULL, NULL, &out_buf, &out_left) == (size_t)-1) {
+			return FAILURE; // handle E2BIG
+		}
+		// TODO iconv_close()
+		int dummy = 42;
+	}
+
+	// TODO: reset shift state on CLEAN
 
 	return SUCCESS;
 }
