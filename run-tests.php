@@ -895,6 +895,7 @@ More .INIs  : " , (function_exists(\'php_ini_scanned_files\') ? str_replace("\n"
         ?>
     PHP);
     $exts_to_test = explode(',', `$php $pass_options $info_params $no_file_cache "$info_file"`);
+var_dump($exts_to_test);
     // check for extensions that need special handling and regenerate
     $info_params_ex = [
         'session' => ['session.auto_start=0'],
