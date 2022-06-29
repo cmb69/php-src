@@ -119,6 +119,8 @@ jobs:
         with:
           task: nmake
       - name: test
-        run: nmake test
+        uses: ./.github/actions/windows-task-runner
+        with:
+          task: nmake test
       - name: Peek
         run: tree /a ..
