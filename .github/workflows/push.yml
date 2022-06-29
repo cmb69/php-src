@@ -88,3 +88,22 @@ jobs:
             -d opcache.jit_buffer_size=16M
       - name: Verify generated files are up to date
         uses: ./.github/actions/verify-generated-files
+  WINDOWS_X64:
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: git checkout
+        uses: actions/checkout@v2
+      - name: Checkout php-sdk
+        uses: actions/checkout@v2
+        with:
+          repository: 'php/php-sdk-binary-tools'
+          path: '../php-sdk'
+      - name: Fetch dependencies
+        uses: ./github/actions/windows-task-runner
+        with:
+          task: phpsdk_deps.bat -s staging -u
+      - name: Peek
+        run: tree /a ..

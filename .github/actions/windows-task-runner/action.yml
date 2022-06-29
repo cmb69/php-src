@@ -1,0 +1,12 @@
+name: Run Windows Task
+inputs:
+  task:
+    description: The task to execute
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: cmd
+      run: |
+        echo ${{ inputs.task }}> task.bat
+        ..\php-sdk\phpsdk-vs16-x64.bat -t task.bat
