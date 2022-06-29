@@ -106,5 +106,13 @@ jobs:
         uses: ./.github/actions/windows-task-runner
         with:
           task: phpsdk_deps.bat -s staging -u
+      - name: buildconf
+        uses: ./.github/actions/windows-task-runner
+        with:
+          task: buildconf.bat
+      - name: configure
+        uses: ./.github/actions/windows-task-runner
+        with:
+          task: configure.bat --enable-snapshot-build
       - name: Peek
         run: tree /a ..
