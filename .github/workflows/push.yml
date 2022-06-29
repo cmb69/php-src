@@ -101,7 +101,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: 'php/php-sdk-binary-tools'
-          path: '../php-sdk'
+          path: 'php-sdk'
       - name: Fetch dependencies
         uses: ./github/actions/windows-task-runner
         with:

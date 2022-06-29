@@ -9,4 +9,4 @@ runs:
     - shell: cmd
       run: |
         echo ${{ inputs.task }}> task.bat
-        ..\php-sdk\phpsdk-vs16-x64.bat -t task.bat
+        php-sdk\phpsdk-vs16-x64.bat -t task.bat
