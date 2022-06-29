@@ -114,5 +114,9 @@ jobs:
         uses: ./.github/actions/windows-task-runner
         with:
           task: configure.bat --enable-snapshot-build
+      - name: make
+        uses: ./.github/actions/windows-task-runner
+        with:
+          task: nmake
       - name: Peek
         run: tree /a ..
