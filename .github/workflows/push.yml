@@ -121,6 +121,6 @@ jobs:
       - name: test
         uses: ./.github/actions/windows-task-runner
         with:
-          task: nmake test
+          task: nmake test TESTS=-j2
       - name: Peek
         run: tree /a ..
