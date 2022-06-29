@@ -103,7 +103,7 @@ jobs:
           repository: 'php/php-sdk-binary-tools'
           path: 'php-sdk'
       - name: Fetch dependencies
-        uses: ./github/actions/windows-task-runner
+        uses: ./.github/actions/windows-task-runner
         with:
           task: phpsdk_deps.bat -s staging -u
       - name: Peek
