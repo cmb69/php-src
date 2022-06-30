@@ -95,6 +95,8 @@ jobs:
       run:
         shell: cmd
     steps:
+      - name: Keep line endings
+        run: git config --global core.autocrlf false
       - name: git checkout
         uses: actions/checkout@v2
       - name: Checkout php-sdk
