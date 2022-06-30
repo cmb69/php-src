@@ -97,7 +97,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64, x86]
+        arch: [x64]
+        zts: [false, true]
     steps:
       - name: Keep line endings
         run: git config --global core.autocrlf false
@@ -121,7 +122,7 @@ jobs:
       - name: configure
         uses: ./.github/actions/windows-task-runner
         with:
-          task: configure.bat --enable-snapshot-build --disable-test-ini
+          task: configure.bat --enable-snapshot-build --disable-test-ini ${{matrix.zts && '--enable-zts' || '--disable-zts'}}
           arch: ${{matrix.arch}}
       - name: make
         uses: ./.github/actions/windows-task-runner
