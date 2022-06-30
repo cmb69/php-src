@@ -123,6 +123,6 @@ jobs:
       - name: test
         uses: ./.github/actions/windows-task-runner
         with:
-          task: nmake test TESTS="-j2 -q --offline --show-diff --show-slow 1000 --set-timeout 120"
+          task: nmake test TESTS="-j3 -q --offline --show-diff --show-slow 1000 --set-timeout 120"
       - name: Peek
         run: tree /a ..
