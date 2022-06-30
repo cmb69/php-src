@@ -121,8 +121,6 @@ jobs:
         with:
           task: nmake
       - name: test
-        uses: ./.github/actions/windows-task-runner
-        with:
-          task: nmake test TESTS="-j3 -q --offline --show-diff --show-slow 1000 --set-timeout 120"
+        run: php-sdk\phpsdk-vs16-x64.bat -t .github\scripts\test_task.bat
       - name: Peek
         run: tree /a ..
