@@ -124,3 +124,8 @@ jobs:
         run: php-sdk\phpsdk-vs16-x64.bat -t .github\scripts\test_task.bat
       - name: Peek
         run: tree /a ..
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts
+          path: C:/artifacts
