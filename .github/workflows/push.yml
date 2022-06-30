@@ -115,7 +115,7 @@ jobs:
       - name: configure
         uses: ./.github/actions/windows-task-runner
         with:
-          task: configure.bat --enable-snapshot-build --with-test-ini-ext-exclude=pdo_firebird,snmp
+          task: configure.bat --enable-snapshot-build --disable-test-ini
       - name: make
         uses: ./.github/actions/windows-task-runner
         with:
