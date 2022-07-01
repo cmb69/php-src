@@ -1,4 +1,5 @@
-set OPCACHE=%1
+set ARCH=%1
+set OPCACHE=%2
 
 mkdir C:\artifacts
 
