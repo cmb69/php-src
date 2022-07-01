@@ -6,6 +6,8 @@ if exist Release set PHP_BUILD_DIR=Release
 if exist Release_TS set PHP_BUILD_DIR=Release_TS
 
 echo extension_dir=%PHP_BUILD_DIR%> %PHP_BUILD_DIR%\php.ini
+rem work-around for some spawned PHP processes requiring OpenSSL
+echo extension=php_openssl.dll>> %PHP_BUILD_DIR%\php.ini
 
 set TEST_PHP_JUNIT=C:\artifacts\junit.out.xml
 set SKIP_IO_CAPTURE_TESTS=1
