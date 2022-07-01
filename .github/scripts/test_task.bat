@@ -1,6 +1,7 @@
 set ARCH=%1
 set ZTS=%2
-set OPCACHE=%3
+set DEBUG=%3
+set OPCACHE=%4
 
 mkdir C:\artifacts
 
@@ -22,6 +23,7 @@ if "%OPCACHE%"=="1" (
 set TEST_PHP_JUNIT=C:\artifacts\junit-%ARCH%
 if "%ZTS%"=="1" (set TEST_PHP_JUNIT=%TEST_PHP_JUNIT%-zts) else set TEST_PHP_JUNIT=%TEST_PHP_JUNIT%-nts
 if "%OPCACHE%"=="1" (set TEST_PHP_JUNIT=%TEST_PHP_JUNIT%-opcache) else set TEST_PHP_JUNIT=%TEST_PHP_JUNIT%-nocache
+if "%DEBUG%"=="1" (set TEST_PHP_JUNIT=%TEST_PHP_JUNIT%-debug) else set TEST_PHP_JUNIT=%TEST_PHP_JUNIT%-release
 set TEST_PHP_JUNIT=%TEST_PHP_JUNIT%.xml
 
 set SKIP_IO_CAPTURE_TESTS=1

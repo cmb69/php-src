@@ -99,7 +99,8 @@ jobs:
       matrix:
         arch: [x64]
         zts: [false]
-        opcache: [false, true]
+        debug: [false, true]
+        opcache: [false]
     steps:
       - name: Keep line endings
         run: git config --global core.autocrlf false
@@ -123,7 +124,7 @@ jobs:
       - name: configure
         uses: ./.github/actions/windows-task-runner
         with:
-          task: configure.bat --enable-snapshot-build --disable-test-ini ${{matrix.zts && '--enable-zts' || '--disable-zts'}}
+          task: configure.bat --enable-snapshot-build --disable-test-ini ${{matrix.zts && '--enable-zts' || '--disable-zts'}} ${{matrix.debug && '--enable-debug --disable-debug-pack'}}
           arch: ${{matrix.arch}}
       - name: make
         uses: ./.github/actions/windows-task-runner
@@ -131,7 +132,7 @@ jobs:
           task: nmake
           arch: ${{matrix.arch}}
       - name: test
-        run: call php-sdk\phpsdk-vs16-${{matrix.arch}}.bat -t .github\scripts\test_task.bat --task-args "${{matrix.arch}} ${{matrix.zts}} ${{matrix.opcache && 1 || 0}}"
+        run: call php-sdk\phpsdk-vs16-${{matrix.arch}}.bat -t .github\scripts\test_task.bat --task-args "${{matrix.arch}} ${{matrix.zts}} ${{matrix.debug}} ${{matrix.opcache && 1 || 0}}"
       - name: Peek
         run: tree /a ..
       - name: Upload artifacts
