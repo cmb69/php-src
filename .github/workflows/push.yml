@@ -98,7 +98,8 @@ jobs:
       fail-fast: false
       matrix:
         arch: [x64]
-        zts: [false, true]
+        zts: [false]
+        opcache: [false, true]
     steps:
       - name: Keep line endings
         run: git config --global core.autocrlf false
@@ -130,7 +131,7 @@ jobs:
           task: nmake
           arch: ${{matrix.arch}}
       - name: test
-        run: call php-sdk\phpsdk-vs16-${{matrix.arch}}.bat -t .github\scripts\test_task.bat
+        run: call php-sdk\phpsdk-vs16-${{matrix.arch}}.bat -t .github\scripts\test_task.bat ${{matrix.opcache && 1 || 0}}
       - name: Peek
         run: tree /a ..
       - name: Upload artifacts
