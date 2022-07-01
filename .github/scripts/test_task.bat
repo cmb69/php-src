@@ -1,5 +1,6 @@
 set ARCH=%1
-set OPCACHE=%2
+set ZTS=%2
+set OPCACHE=%3
 
 mkdir C:\artifacts
 
@@ -18,7 +19,11 @@ if "%OPCACHE%"=="1" (
     echo opcache.file_cache=%PHP_BUILD_DIR%\test_file_cache>> %PHP_BUILD_DIR%\php.ini
 )
 
-set TEST_PHP_JUNIT=C:\artifacts\junit.out.xml
+set TEST_PHP_JUNIT=C:\artifacts\junit-%ARCH%
+if "%ZTS%"=="1" (set TEST_PHP_JUNIT=%TEST_PHP_JUNIT%-zts) else set TEST_PHP_JUNIT=%TEST_PHP_JUNIT%-nts
+if "%OPCACHE%"=="1" (set TEST_PHP_JUNIT=%TEST_PHP_JUNIT%-opcache) else set TEST_PHP_JUNIT=%TEST_PHP_JUNIT%-nocache
+set TEST_PHP_JUNIT=%TEST_PHP_JUNIT%.xml
+
 set SKIP_IO_CAPTURE_TESTS=1
 set REPORT_EXIT_STATUS=1
 if "%OPCACHE%"=="1" set OPCACHE_OPTS=-d opcache.enable=1 -d opcache.enable_cli=1 -d opcache.protect_memory=1 -d opcache.jit_buffer_size=16M
