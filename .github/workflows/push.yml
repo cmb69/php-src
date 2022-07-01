@@ -131,7 +131,7 @@ jobs:
           task: nmake
           arch: ${{matrix.arch}}
       - name: test
-        run: call php-sdk\phpsdk-vs16-${{matrix.arch}}.bat -t .github\scripts\test_task.bat ${{matrix.opcache && 1 || 0}}
+        run: call php-sdk\phpsdk-vs16-${{matrix.arch}}.bat -t .github\scripts\test_task.bat --task-args ${{matrix.opcache && 1 || 0}}
       - name: Peek
         run: tree /a ..
       - name: Upload artifacts
