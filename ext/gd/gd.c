@@ -55,8 +55,6 @@
 # include <X11/xpm.h>
 #endif
 
-#include "gd_compat.h"
-
 #ifdef HAVE_GD_BUNDLED
 # include "libgd/gd.h"
 # include "libgd/gd_errors.h"
