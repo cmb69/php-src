@@ -60,7 +60,8 @@ $port = 14430;
 
 // set up local server
 $cmd = "openssl s_server -key $serverKeyPath -cert $serverCertPath -accept $port -www -CAfile $clientCertPath -verify_return_error -Verify 1";
-$process = proc_open($cmd, [["pipe", "r"], ["pipe", "w"], ["pipe", "w"]], $pipes);
+$type = PHP_OS_FAMILY !== "Windows" ? "pipe" : "socket";
+$process = proc_open($cmd, [[$type, "r"], [$type, "w"], [$type, "w"]], $pipes);
 
 if ($process === false) {
     die('failed to start server');
